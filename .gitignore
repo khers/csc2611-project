@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Data set
+hein-bound
+
 # C extensions
 *.so
 
