@@ -5,6 +5,7 @@ __pycache__/
 
 # Data set
 hein-bound
+prepared_txt
 
 # C extensions
 *.so
