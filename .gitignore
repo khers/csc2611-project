@@ -7,6 +7,12 @@ __pycache__/
 hein-bound
 prepared_txt
 
+# GloVe binaries
+GloVe
+
+# Models
+models
+
 # C extensions
 *.so
 
