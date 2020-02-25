@@ -67,8 +67,11 @@ if __name__ == "__main__":
             fd.write(out)
 
         exe = '{}/glove'.format(args.glove)
-        cmd = [exe, '-save-file', '{}/vectors_{}_{}.bin'.format(args.output, args.windowing, target), '-threads',
+        cmd = [exe, '-save-file', '{}/vectors_{}_{}'.format(args.output, args.windowing, target), '-threads',
         str(numCpus), '-input-file', cooccur_shuff_file, '-x-max', '10', '-iter', str(args.max_iterations),
         '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', vocab_file, '-verbose', '2']
         p = Popen(cmd)
         _,_ = p.communicate()
+
+        os.remove(vocab_file)
+        os.remove(cooccur_shuff_file)
