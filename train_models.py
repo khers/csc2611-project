@@ -5,6 +5,7 @@ import sys
 import multiprocessing
 import argparse
 from subprocess import Popen, PIPE
+from gensim.scripts.glove2word2vec import glove2word2vec
 
 def read_input_data(windowing, target, training):
     if windowing == 'middle':
@@ -72,3 +73,8 @@ if __name__ == "__main__":
 
         os.remove(vocab_file)
         os.remove(cooccur_shuff_file)
+        os.remove('{}/vectors_{}_{}.bin'.format(args.output, args.windowing, target))
+
+        glove2word2vec('{}/vectors_{}_{}.txt'.format(args.output, args.windowing, target),
+                       '{}/vectors_{}_{}.word2vec'.format(args.output, args.windowing, target))
+        os.remove('{}/vectors_{}_{}.txt'.format(args.output, args.windowing, target))
