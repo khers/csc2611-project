@@ -13,7 +13,7 @@ def read_input_data(windowing, target, training):
         p3 = '{}/prepared_{:03d}.txt'.format(training, target + 1)
     elif windowing == 'leading':
         p1 = '{}/prepared_{:03d}.txt'.format(training, target - 2)
-        p1 = '{}/prepared_{:03d}.txt'.format(training, target - 1)
+        p2 = '{}/prepared_{:03d}.txt'.format(training, target - 1)
         p3 = '{}/prepared_{:03d}.txt'.format(training, target)
     input = []
     for entry in [p1, p2, p3]:
@@ -38,9 +38,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
 
-    # cat prepared_txt/prepared_055.txt prepared_txt/prepared_056.txt
-    # prepared_txt/prepared_057.txt | ~/GloVe/build/vocab_count
-    # -min-count 5 -verbose 2 > models/vocab_056.txt
     numCpus = multiprocessing.cpu_count()
 
     for target in range(args.start, args.end + 1):
