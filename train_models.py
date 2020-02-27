@@ -24,6 +24,20 @@ def read_input_data(windowing, target, training):
     return ' '.join(input)
 
 
+def build_complete_vocab_file(args):
+    input = []
+    for i in range(args.start, args.end + 1):
+        with open('{}/prepared_{:03d}.txt'.format(args.training, i), 'r') as fd:
+            for line in fd:
+                input.append(line)
+
+    cmd = ['{}/vocab_count'.format(args.glove), '-min-count', str(args.min_count), '-verbose', '2']
+    p = Popen(cmd, bufsize=1073741824, stdin=PIPE, stdout=PIPE, universal_newlines=True)
+    out,_ = p.communicate(input=' '.join(input))
+    with open('{}/vocab_complete.txt'.format(args.output), 'w') as fd:
+        fd.write(out)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run GloVe training steps  with specified configuration.")
     parser.add_argument('-t', '--training', default='prepared_txt', help='path to prepared data')
@@ -52,7 +66,7 @@ if __name__ == "__main__":
             fd.write(out)
 
         exe = '{}/cooccur'.format(args.glove)
-        cmd = [exe, '-memory', str(args.memory), '-verbose', '2', '-vocab-file', vocab_file, '-window-size', '15']
+        cmd = [exe, '-memory', str(args.memory), '-verbose', '2', '-vocab-file', '{}/vocab_complete.txt'.format(args.output), '-window-size', '15']
         p = Popen(cmd, bufsize=268435456, stdin=PIPE, stdout=PIPE)
         coocur,_ = p.communicate(input=bytes(input, 'utf-8'))
 
@@ -65,16 +79,16 @@ if __name__ == "__main__":
             fd.write(out)
 
         exe = '{}/glove'.format(args.glove)
-        cmd = [exe, '-save-file', '{}/vectors_{}_{}'.format(args.output, args.windowing, target), '-threads',
+        cmd = [exe, '-save-file', '{}/vectors_{}_{:03d}'.format(args.output, args.windowing, target), '-threads',
         str(numCpus), '-input-file', cooccur_shuff_file, '-x-max', '10', '-iter', str(args.max_iterations),
-        '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', vocab_file, '-verbose', '2']
+        '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', '{}/vocab_complete.txt'.format(args.output), '-verbose', '2']
         p = Popen(cmd)
         p.communicate()
 
-        os.remove(vocab_file)
         os.remove(cooccur_shuff_file)
-        os.remove('{}/vectors_{}_{}.bin'.format(args.output, args.windowing, target))
+        os.remove('{}/vectors_{}_{:03d}.bin'.format(args.output, args.windowing, target))
 
-        glove2word2vec('{}/vectors_{}_{}.txt'.format(args.output, args.windowing, target),
+        glove2word2vec('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target),
                        '{}/vectors_{}_{}.word2vec'.format(args.output, args.windowing, target))
-        os.remove('{}/vectors_{}_{}.txt'.format(args.output, args.windowing, target))
+        os.remove('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target))
+        os.remove('{}/vocab_complete.txt'.format(args.output))
