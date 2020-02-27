@@ -27,11 +27,11 @@ def read_input_data(windowing, target, training):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run GloVe training steps  with specified configuration.")
     parser.add_argument('-t', '--training', default='prepared_txt', help='path to prepared data')
-    parser.add_argument('-w', '--windowing', default='middle', choices=['middle', 'leading'], help='How to window the training data')
+    parser.add_argument('-w', '--windowing', default='middle', choices=['middle', 'leading'], help='How to window the training data around the target, middle is wtw and leading is wwt')
     parser.add_argument('-o', '--output', default='models', help='path where resulting models and intermediate files should be placed')
     parser.add_argument('-g', '--glove', default='./GloVe/build', help='Path where the GloVe executables can be found')
     parser.add_argument('-s', '--start',  default=55, type=int, help='Congress to start with')
-    parser.add_argument('-e', '--end', default=111, type=int, help='Congress to end with')
+    parser.add_argument('-e', '--end', default=110, type=int, help='Congress to end with')
     parser.add_argument('-m', '--memory', default=6.0, type=float, help='The amount of memory in Gigabyte to allow the training process to use')
     parser.add_argument('-c', '--min-count', default=5, type=int, help='Minimum number of occurences to consider a word')
     parser.add_argument('-v', '--vector-size', default=300, type=int, help='Dimensionality of resulting word vectors')
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         str(numCpus), '-input-file', cooccur_shuff_file, '-x-max', '10', '-iter', str(args.max_iterations),
         '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', vocab_file, '-verbose', '2']
         p = Popen(cmd)
-        _,_ = p.communicate()
+        p.communicate()
 
         os.remove(vocab_file)
         os.remove(cooccur_shuff_file)
