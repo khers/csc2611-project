@@ -55,6 +55,8 @@ if __name__ == "__main__":
 
     numCpus = multiprocessing.cpu_count()
 
+    build_complete_vocab_file(args)
+
     for target in range(args.start, args.end + 1):
         input = read_input_data(args.windowing, target, args.training)
         exe = "{}/vocab_count".format(args.glove)
