@@ -47,13 +47,13 @@ def collect_stop_words(dataset_base_path):
     return names
 
 
-# Load the stop words set from json file, if present.  Otherwise collect the stop
-# words and save to pkl file.
+# Load the stop words set from JSON file, if present.  Otherwise collect the stop
+# words and save to JSON file.
 def load_stop_words(dataset_base_path):
     names = set()
     try:
         with open("{}/stop_words.json".format(dataset_base_path), 'r') as p:
-            names = json.load(p)
+            names = set(json.load(p))
     except (json.decoder.JSONDecodeError,FileNotFoundError):
         with open("{}/stop_words.json".format(dataset_base_path), 'w') as p:
             names = collect_stop_words(dataset_base_path)
@@ -87,7 +87,6 @@ def clean_input(file_path):
     return " ".join(out)
 
 
-
 def prep_file(base, out, index):
     infile = "{}/speeches_{:03d}.txt".format(base, index)
     outfile = "{}/prepared_{:03d}.txt".format(out, index)
@@ -98,7 +97,7 @@ def prep_file(base, out, index):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Prepare speech files for use in training GLoVE models")
+    parser = argparse.ArgumentParser(description="Prepare speech files for use in training GloVe models")
     parser.add_argument('-d', '--directory', default='./hein-bound', help='The top level directory where the data set is stored')
     parser.add_argument('-s', '--start', default=55, type=int, help='The Congress to use as a starting point')
     parser.add_argument('-e', '--end', default=106, type=int, help='The Congress to use as an ending point')
