@@ -93,4 +93,5 @@ if __name__ == "__main__":
         glove2word2vec('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target),
                        '{}/vectors_{}_{}.word2vec'.format(args.output, args.windowing, target))
         os.remove('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target))
-        os.remove('{}/vocab_complete.txt'.format(args.output))
+
+    os.remove('{}/vocab_complete.txt'.format(args.output))
