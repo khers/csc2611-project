@@ -26,7 +26,7 @@ def read_input_data(windowing, target, training):
 
 def build_complete_vocab_file(args):
     input = []
-    for i in range(55, 111):
+    for i in range(53, 111):
         with open('{}/prepared_{:03d}.txt'.format(args.training, i), 'r') as fd:
             for line in fd:
                 input.append(line)

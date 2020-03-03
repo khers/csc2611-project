@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     inputs = [(args, index, index + 1) for index in range(args.start, args.end)]
 
-    with Pool(processes=12) as p:
+    with Pool(processes=16) as p:
         key = args.start + 1
         results = {}
         for entry in p.starmap(measure_differences, inputs):
