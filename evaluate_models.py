@@ -35,6 +35,12 @@ def measure_differences(args, start_index, end_index):
 
     diff = []
     for entry in start_set.intersection(end_set):
+        if entry not in start.vocab:
+            print('{} missing from {} {} model, skipping entry'.format(entry, start_index, args.windowing))
+            continue
+        if entry not in end.vocab:
+            print('{} missing from {} {} model, skipping entry'.format(entry, end_index, args.windowing))
+            continue
         diff.append((entry, end.distances(start.get_vector(entry), other_words=[entry])[0]))
     diff.sort(key=lambda t : t[1])
     return diff,new_words,retired_words
@@ -60,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', '--windowing', choices=['middle', 'leading'], default='middle', help='The windowing method to test')
     parser.add_argument('-s', '--start', type=int, default=55, help='Congress to start on')
     parser.add_argument('-e', '--end', type=int, default=110, help='Congress to end on')
-    parser.add_argument('-o', '--output', default='results.json', help='Where to store the output JSON')
+    parser.add_argument('-o', '--output', default='results', help='Where to store the output JSON')
 
     args = parser.parse_args(sys.argv[1:])
 
@@ -73,5 +79,5 @@ if __name__ == "__main__":
             results[key] = entry
             key += 1
 
-    with open(args.output, 'w') as fd:
+    with open('./{}_{}.json'.format(args.output, args.windowing), 'w') as fd:
         json.dump(results, fd, cls=MyEncoder)
