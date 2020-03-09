@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     numCpus = multiprocessing.cpu_count()
 
-    build_complete_vocab_file(args)
+    #build_complete_vocab_file(args)
 
     for target in range(args.start, args.end + 1):
         input = read_input_data(args.windowing, target, args.training)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             fd.write(out)
 
         exe = '{}/cooccur'.format(args.glove)
-        cmd = [exe, '-memory', str(args.memory), '-verbose', '2', '-vocab-file', '{}/vocab_complete.txt'.format(args.output), '-window-size', '15']
+        cmd = [exe, '-memory', str(args.memory), '-verbose', '2', '-vocab-file', vocab_file, '-window-size', '15']
         p = Popen(cmd, bufsize=268435456, stdin=PIPE, stdout=PIPE)
         coocur,_ = p.communicate(input=bytes(input, 'utf-8'))
 
@@ -83,15 +83,16 @@ if __name__ == "__main__":
         exe = '{}/glove'.format(args.glove)
         cmd = [exe, '-save-file', '{}/vectors_{}_{:03d}'.format(args.output, args.windowing, target), '-threads',
         str(numCpus), '-input-file', cooccur_shuff_file, '-x-max', '10', '-iter', str(args.max_iterations),
-        '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', '{}/vocab_complete.txt'.format(args.output), '-verbose', '2']
+        '-vector-size', str(args.vector_size), '-binary', '2', '-vocab-file', vocab_file, '-verbose', '2']
         p = Popen(cmd)
         p.communicate()
 
         os.remove(cooccur_shuff_file)
+        os.remove(vocab_file)
         os.remove('{}/vectors_{}_{:03d}.bin'.format(args.output, args.windowing, target))
 
         glove2word2vec('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target),
                        '{}/vectors_{}_{}.word2vec'.format(args.output, args.windowing, target))
         os.remove('{}/vectors_{}_{:03d}.txt'.format(args.output, args.windowing, target))
 
-    os.remove('{}/vocab_complete.txt'.format(args.output))
+    #os.remove('{}/vocab_complete.txt'.format(args.output))
