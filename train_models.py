@@ -24,14 +24,22 @@ def read_windowed_input_data(windowing, target, training):
     return ' '.join(input)
 
 
+def read_and_tag_file(file_path):
+    input = []
+    with open(file_path, 'r') as fd:
+        for line in fd:
+            words = [ '{}_{}'.format(word, target) for word in line.split() if not word.isspace() ]
+            input.append((' '.join(words)).strip())
+    return ' '.join(input)
+
+
 def read_tagged_input(training, start, end):
     input = []
     for target in range(start, end + 1):
-        with open('{}/prepared_{:03d}.txt'.format(training, target), 'r') as fd:
-            for line in fd:
-                words = [ '{}_{}'.format(word, target) for word in line.split() if not word.isspace() ]
-                input.append((' '.join(words)).strip())
-    return ' '.join(input)
+        input.append('{}/prepared_{:03d}.txt'.format(training, target))
+    with multiprocessing.Pool() as p:
+        output = p.map(read_and_tag_file, input)
+    return ' '.join(output)
 
 
 def run_vocab(input, args, target):
