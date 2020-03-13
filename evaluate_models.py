@@ -66,7 +66,7 @@ def evaluate_windowed_models(args):
 
 def load_vocab(path, windowing, index):
     vocab = list()
-    with open('{}/vocab_{}_{}.txt', 'r') as fd:
+    with open('{}/vocab_{}_{}.txt'.format(path, windowing, index), 'r') as fd:
         for line in fd:
             vocab.append(line.split()[0])
     return vocab
