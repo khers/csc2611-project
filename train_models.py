@@ -104,6 +104,10 @@ if __name__ == "__main__":
     numCpus = multiprocessing.cpu_count()
 
     if args.windowing == 'none':
+        # First run vocab extraction per congress to be used in model evaluation
+        for target in range(args.start, args.end + 1):
+            with open('{}/prepared_{:03d}.txt'.format(args.training, target), 'r') as fd:
+                run_vocab(fd.read(), args, target)
         input = read_tagged_input(args.training, args.start, args.end)
         vocab_file = run_vocab(input, args, 0)
 
