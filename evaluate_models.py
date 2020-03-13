@@ -71,8 +71,10 @@ def load_vocab(path, windowing, index):
             vocab.append(line.split()[0])
     return vocab
 
+single_model = None
 
-def measure_differences(args, index, model):
+
+def measure_differences(args, index):
     old = load_vocab(args.models, args.windowing, index)
     new = load_vocab(args.models, args.windowing, index + 1)
 
@@ -81,16 +83,17 @@ def measure_differences(args, index, model):
     overlap = [ w for w in old if w in new ]
     diff = []
     for word in overlap:
-        diff.append((word, model.distances('{}_{}'.format(word, index), other_words=['{}_{}'.format(word, index + 1)])))
+        diff.append((word, single_model.distances('{}_{}'.format(word, index), other_words=['{}_{}'.format(word, index + 1)])))
     diff.sort(key=lambda t : t[1])
     return diff,new_words,retired
 
 
 def evaluate_single_model(args):
-    model = KeyedVectors.load_word2vec_format('{}/vectors_none_0.word2vec'.format(args.models))
-    input = [(args, index, model) for index in range(args.start, args.end)]
+    global single_model
+    single_model = KeyedVectors.load_word2vec_format('{}/vectors_none_0.word2vec'.format(args.models))
+    input = [(args, index) for index in range(args.start, args.end)]
     results = {}
-    with Pool as p:
+    with Pool() as p:
         key = args.start + 1
         for entry in p.starmap(measure_differences, input):
             results[key] = entry
