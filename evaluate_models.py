@@ -101,7 +101,7 @@ def evaluate_single_model(args):
     return results
 
 
-def dump_results(filename, dir, windowing):
+def dump_results(results, filename, windowing):
     class MyEncoder(json.JSONEncoder):
         def default(self, obj):
             if isinstance(obj, numpy.integer):
