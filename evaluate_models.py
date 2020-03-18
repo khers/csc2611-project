@@ -7,6 +7,7 @@ import pathlib
 import argparse
 from scipy.linalg import orthogonal_procrustes
 from sklearn.metrics.pairwise import cosine_similarity
+from scipy.spatial.distance import euclidean
 import json
 import numpy
 import sys
@@ -33,24 +34,29 @@ def measure_windowed_differences(args, start_index, end_index):
         s_v.append(start.get_vector(word))
         e_v.append(end.get_vector(word))
 
-
+    filtered_start = pd.DataFrame(s_v, index=overlap)
+    filtered_end = pd.DataFrame(e_v, index=overlap)
 
     # To measure change in words that appear in both models we need to rotate the starting model into the
     # with the orthogonal Procustes solution
-    R,_ = orthogonal_procrustes(start.vectors, end.vectors, check_finite=False)
-    start.vectors = start.vectors @ R
+    R,_ = orthogonal_procrustes(filtered_start, filtered_end, check_finite=False)
+    filtered_start = filtered_start @ R
 
-    diff = []
+    cos_diff = []
+    euc_diff = []
     for entry in overlap:
-        if entry not in start.vocab:
-            print('{} missing from {} {} model, skipping entry'.format(entry, start_index, args.windowing))
-            continue
-        if entry not in end.vocab:
-            print('{} missing from {} {} model, skipping entry'.format(entry, end_index, args.windowing))
-            continue
-        diff.append((entry, end.distances(start.get_vector(entry), other_words=[entry])[0]))
-    diff.sort(key=lambda t : t[1])
-    return diff,new_words,retired_words
+        in1 = filtered_start.loc[entry].to_numpy().reshape(1,300)
+        in2 = filtered_end.loc[entry].to_numpy().reshape(1,300)
+        cos_diff.append((entry, cosine_similarity(in1, in2)))
+        euc_diff.append((entry, euclidean(filtered_start.loc[entry], filtered_end.loc[entry])))
+    cos_diff.sort(key=lambda t : t[1])
+    euc_diff.sort(key=lambda t : t[1], reverse=True)
+    ret = {}
+    ret['cosine_differences'] = cos_diff
+    ret['euclidean_differences'] = euc_diff
+    ret['new_words'] = new_words
+    ret['retired_words'] = retired_words
+    return ret
 
 
 def evaluate_windowed_models(args):
@@ -81,11 +87,21 @@ def measure_differences(args, index):
     retired = set(old) - set(new)
     new_words = set(new) - set(old)
     overlap = [ w for w in old if w in new ]
-    diff = []
+    cos_diff = []
+    euc_diff = []
     for word in overlap:
-        diff.append((word, single_model.distances('{}_{}'.format(word, index), other_words=['{}_{}'.format(word, index + 1)])))
-    diff.sort(key=lambda t : t[1])
-    return diff,new_words,retired
+        v1 = single_model['{}_{}'.format(word, index)]
+        v2 = single_model['{}_{}'.format(word, index + 1)]
+        cos_diff.append((word, cosine_similarity(v1.reshape(1,300), v2.reshape(1,300))))
+        euc_diff.append((word, euclidean(v1, v2)))
+    cos_diff.sort(key=lambda t : t[1])
+    euc_diff.sort(key=lambda t : t[1], reverse=True)
+    ret = {}
+    ret['cosine_differences'] = cos_diff
+    ret['euclidean_differences'] = euc_diff
+    ret['new_words'] = new_words
+    ret['retired_words'] = retired
+    return ret
 
 
 def evaluate_single_model(args):
