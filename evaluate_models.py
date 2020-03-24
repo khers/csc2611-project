@@ -13,6 +13,7 @@ import numpy
 import sys
 from multiprocessing.pool import Pool
 import pandas as pd
+import statistics
 
 
 def measure_windowed_differences(args, start_index, end_index):
@@ -21,7 +22,9 @@ def measure_windowed_differences(args, start_index, end_index):
 
     # Collect new and retired words by comparing the two vocabularies
     start_set = set(start.vocab)
+    start_set.remove('<unk>')
     end_set = set(end.vocab)
+    end_set.remove('<unk>')
     overlap = list(start_set.intersection(end_set))
     new_words = end_set - start_set
     retired_words = start_set - end_set
@@ -42,18 +45,25 @@ def measure_windowed_differences(args, start_index, end_index):
     R,_ = orthogonal_procrustes(filtered_start, filtered_end, check_finite=False)
     filtered_start = filtered_start @ R
 
-    cos_diff = []
-    euc_diff = []
+    ret = {}
+    euclidean_list = []
     for entry in overlap:
         in1 = filtered_start.loc[entry].to_numpy().reshape(1,300)
         in2 = filtered_end.loc[entry].to_numpy().reshape(1,300)
-        cos_diff.append((entry, cosine_similarity(in1, in2)))
-        euc_diff.append((entry, euclidean(filtered_start.loc[entry], filtered_end.loc[entry])))
-    cos_diff.sort(key=lambda t : t[1])
-    euc_diff.sort(key=lambda t : t[1], reverse=True)
-    ret = {}
-    ret['cosine_differences'] = cos_diff
-    ret['euclidean_differences'] = euc_diff
+        item = {}
+        item['cosine'] = cosine_similarity(in1, in2)
+        euc = euclidean(filtered_start.loc[entry], filtered_end.loc[entry])
+        item['euclidean'] = euc
+        euclidean_list.append(euc)
+        ret[entry] = item
+
+    # Euclidean distance is not really comparable between models, instead
+    # of directly comparing we will normalize by subtracting the mean and
+    # dividing by sigma
+    euc_mean = statistics.mean(euclidean_list)
+    euc_sigma = statistics.stdev(euclidean_list)
+    for _,item in ret:
+        item['euclidean'] = (item['euclidean'] - euc_mean) / euc_sigma
     ret['new_words'] = new_words
     ret['retired_words'] = retired_words
     return ret
@@ -87,18 +97,33 @@ def measure_differences(args, index):
     retired = set(old) - set(new)
     new_words = set(new) - set(old)
     overlap = [ w for w in old if w in new ]
-    cos_diff = []
-    euc_diff = []
+    ret = {}
+    euclidean_list = []
+    cosine_list = []
     for word in overlap:
         v1 = single_model['{}_{}'.format(word, index)]
         v2 = single_model['{}_{}'.format(word, index + 1)]
-        cos_diff.append((word, cosine_similarity(v1.reshape(1,300), v2.reshape(1,300))))
-        euc_diff.append((word, euclidean(v1, v2)))
-    cos_diff.sort(key=lambda t : t[1])
-    euc_diff.sort(key=lambda t : t[1], reverse=True)
-    ret = {}
-    ret['cosine_differences'] = cos_diff
-    ret['euclidean_differences'] = euc_diff
+        cos = cosine_similarity(v1.reshape(1,300), v2.reshape(1,300))
+        euc = euclidean(v1, v2)
+        item = {}
+        euclidean_list.append(euc)
+        cosine_list.append(cos)
+        item['euclidean'] = euc
+        item['cosine'] = cos
+        ret[word] = item
+    # The temporaly indexed model seems to cluster items from the same
+    # index and they are all closer to eachother than most words from
+    # other indices.  To compensate for this, we will normalize both the
+    # cosine similarity and the euclidean distance by subtracting the
+    # mean and dividing by sigma as we did for euclidean distance in the
+    # rotated models
+    euc_mean = statistics.mean(euclidean_list)
+    euc_sigma = statistics.stdev(euclidean_list)
+    cos_mean = statistics.mean(cosine_list)
+    cos_sigma = statistics.stdev(cosine_list)
+    for _,item in ret:
+        item['cosine'] = (item['cosine'] - cos_mean) / cos_sigma
+        item['euclidean'] = (item['euclidean'] - euc_mean) / euc_sigma
     ret['new_words'] = new_words
     ret['retired_words'] = retired
     return ret
