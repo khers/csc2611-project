@@ -51,7 +51,7 @@ def measure_windowed_differences(args, start_index, end_index):
         in1 = filtered_start.loc[entry].to_numpy().reshape(1,300)
         in2 = filtered_end.loc[entry].to_numpy().reshape(1,300)
         item = {}
-        item['cosine'] = cosine_similarity(in1, in2)
+        item['cosine'] = cosine_similarity(in1, in2)[0][0]
         euc = euclidean(filtered_start.loc[entry], filtered_end.loc[entry])
         item['euclidean'] = euc
         euclidean_list.append(euc)
@@ -62,7 +62,7 @@ def measure_windowed_differences(args, start_index, end_index):
     # dividing by sigma
     euc_mean = statistics.mean(euclidean_list)
     euc_sigma = statistics.stdev(euclidean_list)
-    for _,item in ret:
+    for _,item in ret.items():
         item['euclidean'] = (item['euclidean'] - euc_mean) / euc_sigma
     ret['new_words'] = new_words
     ret['retired_words'] = retired_words
@@ -103,7 +103,7 @@ def measure_differences(args, index):
     for word in overlap:
         v1 = single_model['{}_{}'.format(word, index)]
         v2 = single_model['{}_{}'.format(word, index + 1)]
-        cos = cosine_similarity(v1.reshape(1,300), v2.reshape(1,300))
+        cos = float(cosine_similarity(v1.reshape(1,300), v2.reshape(1,300))[0][0])
         euc = euclidean(v1, v2)
         item = {}
         euclidean_list.append(euc)
@@ -121,7 +121,7 @@ def measure_differences(args, index):
     euc_sigma = statistics.stdev(euclidean_list)
     cos_mean = statistics.mean(cosine_list)
     cos_sigma = statistics.stdev(cosine_list)
-    for _,item in ret:
+    for _,item in ret.items():
         item['cosine'] = (item['cosine'] - cos_mean) / cos_sigma
         item['euclidean'] = (item['euclidean'] - euc_mean) / euc_sigma
     ret['new_words'] = new_words
@@ -157,7 +157,7 @@ def dump_results(results, filename, windowing):
                 return super(MyEncoder, self).default(obj)
 
     with open('./{}_{}.json'.format(filename, windowing), 'w') as fd:
-        json.dump(results, fd, cls=MyEncoder)
+        json.dump(results, fd, indent=2, cls=MyEncoder)
 
 
 if __name__ == "__main__":
