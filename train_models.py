@@ -13,16 +13,19 @@ from nltk.lm import Vocabulary
 
 
 def read_windowed_input_data(windowing, target, training):
+    sources = []
     if windowing == 'middle':
-        p1 = '{}/prepared_{:03d}.txt'.format(training, target - 1)
-        p2 = '{}/prepared_{:03d}.txt'.format(training, target)
-        p3 = '{}/prepared_{:03d}.txt'.format(training, target + 1)
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target - 1))
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target))
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target + 1))
     elif windowing == 'leading':
-        p1 = '{}/prepared_{:03d}.txt'.format(training, target - 2)
-        p2 = '{}/prepared_{:03d}.txt'.format(training, target - 1)
-        p3 = '{}/prepared_{:03d}.txt'.format(training, target)
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target - 2))
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target - 1))
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target))
+    elif windowing == 'single':
+        sources.append('{}/prepared_{:03d}.txt'.format(training, target))
     input = []
-    for entry in [p1, p2, p3]:
+    for entry in sources:
         with open(entry, 'r') as fd:
             for line in fd:
                 input.append(line)
@@ -144,7 +147,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run GloVe training steps  with specified configuration.")
     parser.add_argument('-t', '--training', default='prepared_txt', help='path to prepared data')
     parser.add_argument('-M', '--mode', default='glove', choices=['glove', 'ppmi'], help='Which model training method to use')
-    parser.add_argument('-w', '--windowing', default='middle', choices=['middle', 'leading', 'none'], help='How to window the training data around the target, middle is wtw and leading is wwt, none is a single model with words tagged by congress')
+    parser.add_argument('-w', '--windowing', default='middle', choices=['single', 'middle', 'leading', 'none'], help='How to window the training data around the target, middle is wtw and leading is wwt, none is a single model with words tagged by congress')
     parser.add_argument('-o', '--output', default='models', help='path where resulting models and intermediate files should be placed')
     parser.add_argument('-g', '--glove', default='./GloVe/build', help='Path where the GloVe executables can be found')
     parser.add_argument('-s', '--start',  default=55, type=int, help='Congress to start with')

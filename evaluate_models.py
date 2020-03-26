@@ -163,7 +163,7 @@ def dump_results(results, filename, windowing):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Evaluate models for semantic change')
     parser.add_argument('-m', '--models', default='./models', help='Path to directory containing models')
-    parser.add_argument('-w', '--windowing', choices=['middle', 'leading', 'none'], default='middle', help='The windowing method to test')
+    parser.add_argument('-w', '--windowing', choices=['single', 'middle', 'leading', 'none'], default='middle', help='The windowing method to test')
     parser.add_argument('-s', '--start', type=int, default=55, help='Congress to start on')
     parser.add_argument('-e', '--end', type=int, default=110, help='Congress to end on')
     parser.add_argument('-o', '--output', default='results', help='Where to store the output JSON')
