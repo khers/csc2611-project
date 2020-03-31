@@ -30,3 +30,11 @@ def detect_encoding(filepath):
         result['encoding']='cp1252'
 
     return result
+
+
+def load_target_words(target_path):
+    target_words = []
+    with open(target_path, 'r') as fd:
+        for line in fd:
+            target_words.extend([entry for entry in line.split() if entry and not entry.isspace()])
+    return target_words

@@ -10,6 +10,7 @@ import nltk
 from nltk.collocations import BigramAssocMeasures,BigramCollocationFinder
 import pandas as pd
 from nltk.lm import Vocabulary
+from utilities import load_target_words
 
 
 def read_windowed_input_data(windowing, target, training):
@@ -33,19 +34,21 @@ def read_windowed_input_data(windowing, target, training):
 
 
 def read_and_tag_file(arg):
-    file_path,target = arg
+    file_path,target_session,target_words = arg
     input = []
     with open(file_path, 'r') as fd:
         for line in fd:
-            words = [ '{}_{}'.format(word, target) for word in line.split() if not word.isspace() ]
-            input.append((' '.join(words)).strip())
+            input_words = [entry for entry in line.split() if entry and not entry.isspace()]
+            input_words = [entry if entry not in target_words else "{}_{}".format(entry, target_session) for entry in input_words]
+            input.append((' '.join(input_words)).strip())
     return ' '.join(input)
 
 
-def read_tagged_input(training, start, end):
+def read_tagged_input(training, start, end, targets_path):
+    target_words = load_target_words(targets_path)
     input = []
     for target in range(start, end + 1):
-        input.append(('{}/prepared_{:03d}.txt'.format(training, target), target))
+        input.append(('{}/prepared_{:03d}.txt'.format(training, target), target, target_words))
     with multiprocessing.Pool() as p:
         output = p.map(read_and_tag_file, input)
     return ' '.join(output)
@@ -102,7 +105,7 @@ def glove_training(args):
         for target in range(args.start, args.end + 1):
             with open('{}/prepared_{:03d}.txt'.format(args.training, target), 'r') as fd:
                 run_vocab(fd.read(), args, target)
-        input = read_tagged_input(args.training, args.start, args.end)
+        input = read_tagged_input(args.training, args.start, args.end, args.target_words)
         vocab_file = run_vocab(input, args, 0)
 
         cooccur_shuff_file = run_cooccur_and_shuffle(input, args, vocab_file, 0)
@@ -132,6 +135,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--min-count', default=5, type=int, help='Minimum number of occurences to consider a word')
     parser.add_argument('-v', '--vector-size', default=300, type=int, help='Dimensionality of resulting word vectors')
     parser.add_argument('-i', '--max-iterations', default=20, type=int, help='Maximum iterations allowed for the GloVe method')
+    parser.add_argument('-T', '--target-words', default='', help='Path to file with list of target words separated by whitespace, for none type windowing (Temporally Referenced)')
 
     args = parser.parse_args(sys.argv[1:])
 
