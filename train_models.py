@@ -120,33 +120,9 @@ def glove_training(args):
             run_glove(args, vocab_file, cooccur_shuff_file, target)
 
 
-def ppmi_training(args):
-    input = read_tagged_input(args.training, args.start, args.end)
-    finder = nltk.BigramCollocationFinder.from_words(input.split())
-    finder.apply_freq_filter(args.min_count)
-    vocab = Vocabulary(input.split(), unk_cutoff=args.min_count)
-    words = [word for word in vocab]
-    bigram_measures = nltk.collocations.BigramAssocMeasures()
-    scores = {entry[0]:entry[1] for entry in finder.score_ngrams(bigram_measures.pmi)}
-
-    all_rows = []
-    for word_1 in words:
-        row = []
-        for word_2 in words:
-            if (word_1, word_2) not in scores or scores[(word_1, word_2)] < 0:
-                row.append(0)
-            else:
-                row.append(scores[(word_1, word_2)])
-        all_rows.append(row)
-
-    df = pd.DataFrame(all_rows, columns=words, index=words)
-    df.to_pickle('{}/ppmi.pkl'.format(args.output))
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run GloVe training steps  with specified configuration.")
     parser.add_argument('-t', '--training', default='prepared_txt', help='path to prepared data')
-    parser.add_argument('-M', '--mode', default='glove', choices=['glove', 'ppmi'], help='Which model training method to use')
     parser.add_argument('-w', '--windowing', default='middle', choices=['single', 'middle', 'leading', 'none'], help='How to window the training data around the target, middle is wtw and leading is wwt, none is a single model with words tagged by congress')
     parser.add_argument('-o', '--output', default='models', help='path where resulting models and intermediate files should be placed')
     parser.add_argument('-g', '--glove', default='./GloVe/build', help='Path where the GloVe executables can be found')
@@ -159,7 +135,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args(sys.argv[1:])
 
-    if args.mode == 'glove':
-        glove_training(args)
-    else:
-        ppmi_training(args)
+    glove_training(args)
