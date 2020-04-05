@@ -14,6 +14,7 @@ import sys
 from multiprocessing.pool import Pool
 import pandas as pd
 import statistics
+from utilities import load_target_words
 
 
 def measure_windowed_differences(args, start_index, end_index):
@@ -57,13 +58,6 @@ def measure_windowed_differences(args, start_index, end_index):
         euclidean_list.append(euc)
         ret[entry] = item
 
-    # Euclidean distance is not really comparable between models, instead
-    # of directly comparing we will normalize by subtracting the mean and
-    # dividing by sigma
-    euc_mean = statistics.mean(euclidean_list)
-    euc_sigma = statistics.stdev(euclidean_list)
-    for _,item in ret.items():
-        item['euclidean'] = (item['euclidean'] - euc_mean) / euc_sigma
     ret['new_words'] = new_words
     ret['retired_words'] = retired_words
     return ret
@@ -167,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--start', type=int, default=55, help='Congress to start on')
     parser.add_argument('-e', '--end', type=int, default=110, help='Congress to end on')
     parser.add_argument('-o', '--output', default='results', help='Where to store the output JSON')
+    parser.add_argument('-T', '--target-words', default='', help='Path to file with list of target words separated by whitespace, for none type windowing (Temporally Referenced)')
 
     args = parser.parse_args(sys.argv[1:])
 
